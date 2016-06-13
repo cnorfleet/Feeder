@@ -1,6 +1,4 @@
-/*   Main code for mouse behavoior tracking for two pellet dispensors
- *   Created on June 13, 2016
- */
+/* Main code for mouse behavoior tracking for two pellet dispensors */
 #include <avr/sleep.h>
 #include <avr/power.h>
 #include <avr/wdt.h>
@@ -24,7 +22,7 @@
 
 // Photo interrupter is also the wakeup for the system
 #define PHOTO_INTERRUPTER_PIN_1 2
-//#define PHOTO_INTERRUPTER_PIN_2 null
+//#define PHOTO_INTERRUPTER_PIN_2 3
 
 const int PHOTO_INTERRUPTER_PINS[] = { PHOTO_INTERRUPTER_PIN_1 };
 
@@ -52,7 +50,7 @@ const int MOTOR_STEPS_PER_REVOLUTION = 513;
 int PIStates[] = { 1 };
 int lastStates[] = { 1 };
 
-int pelletCount[] = 0;
+int pelletCount[] = { 0 };
 
 // Stepper motor with shield test
 //Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
@@ -87,8 +85,11 @@ int logData()
     Serial.println(time);
     dataFile.print(time);
     dataFile.print(",");
-    dataFile.print(pelletCount);
-    dataFile.print(",");
+    for (int i = 0; i < sizeof(pelletCount); i++)
+    {
+      dataFile.print(pelletCount[i]);
+      dataFile.print(",");
+    }
     dataFile.println(timeElapsed);
     dataFile.close();
   }
@@ -121,7 +122,7 @@ void setup()
   setDisplayBrightness(64);
   clearDisplay();
   delay(1); // allow a very short delay for display response
-  setDisplayValues(pelletCount);
+  setDisplayValues(pelletCount[0]);
   for (int i = 0; i < sizeof(PHOTO_INTERRUPTER_PINS); i++)
   { pinMode(PHOTO_INTERRUPTER_PINS[i], INPUT); }
   pinMode(TTL_DEBUG_PIN, OUTPUT);
@@ -161,7 +162,10 @@ void setup()
 
   else {
     dataFile.print(time);
-    dataFile.println(F("Time,Pellet Count,Pellet Drop Delay"));
+    String temp = "";
+    for (int i = 1; i <= sizeof(pelletCount); i++)
+    { temp += ",Pellet Count #" + String(i); }
+    dataFile.println(F("Time"+temp+",Pellet Drop Delay"));
     dataFile.close();
   }
   
@@ -196,11 +200,11 @@ bool updateState( int inputNum )
     Serial.println(timeElapsed);
     timecounter(timeElapsed);
     logData();
-    pelletCount++;
+    pelletCount[inputNum]++;
     Serial.println(F("It did work"));
     clearDisplay();
     delay(2); // allow a very short delay for display response
-    setDisplayValues(pelletCount);
+    setDisplayValues(pelletCount[inputNum]);
     lastStates[inputNum] = PIStates[inputNum];
   }
   else if (PIStates[inputNum] == 1) {
