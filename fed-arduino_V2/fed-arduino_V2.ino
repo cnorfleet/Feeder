@@ -164,6 +164,7 @@ void setup()
     String temp = "";
     for (int i = 1; i <= sizeof(pelletCount); i++)
     { temp += ",Pellet Count #" + String(i); }
+    temp = "Time" + temp + ",Pellet Drop Delay";
     dataFile.println(temp);
     dataFile.close();
   }
