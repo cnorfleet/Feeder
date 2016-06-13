@@ -97,8 +97,7 @@ int logData()
   power_spi_disable();
 }
 
-// Send the clear display command (0x76)
-//  This will clear the display and reset the cursor
+//Clears the display and resets the cursor
 void clearDisplay()
 { LEDserial.write(0x76); } // Clear display command
 
@@ -165,7 +164,7 @@ void setup()
     String temp = "";
     for (int i = 1; i <= sizeof(pelletCount); i++)
     { temp += ",Pellet Count #" + String(i); }
-    dataFile.println(F("Time"+temp+",Pellet Drop Delay"));
+    dataFile.println(temp);
     dataFile.close();
   }
   
@@ -187,7 +186,7 @@ void loop()
   delay(100);
 }
 
-bool updateState( int inputNum )
+bool updateState(int inputNum)
 {
   PIStates[inputNum] = digitalRead(PHOTO_INTERRUPTER_PINS[inputNum]);
   Serial.print("Photointerrupter State " + String(inputNum + 1) + ": ");
@@ -226,7 +225,7 @@ bool updateState( int inputNum )
     lastStates[inputNum] = PIStates[inputNum];
   }
     
-  else  {
+  else  { //if PIStates == 0
     lastStates[inputNum] = PIStates[inputNum];
     return false;
   }
@@ -236,9 +235,9 @@ bool updateState( int inputNum )
 void timecounter(long timeNow)
 {
   Serial.println(timeNow);
-  int days = timeNow / day2 ;                                //number of days
-  int hours = (timeNow % day2) / hour2;                       //the remainder from days division (in milliseconds) divided by hours, this gives the full hours
-  int minutes = ((timeNow % day2) % hour2) / minute2 ;         //and so on...
+  int days = timeNow / day2;
+  int hours = (timeNow % day2) / hour2;
+  int minutes = ((timeNow % day2) % hour2) / minute2;
   int seconds = (((timeNow % day2) % hour2) % minute2) / second2;
   int mil = ((((timeNow % day2) % hour2) % minute2) % second2);
 
@@ -260,10 +259,8 @@ void printDigits(byte digits)
 
 void enterSleep()
 {
-  power_usart0_disable();// Serial (USART) 
-
+  power_usart0_disable(); //Serial (USART)
   sleep_enable();
-
 
   attachInterrupt(0, pinInterrupt, RISING);
   for (int i = 0; i < sizeof(PHOTO_INTERRUPTER_PINS); i++)
