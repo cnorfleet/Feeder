@@ -4,7 +4,7 @@
 #include <avr/sleep.h>
 #include <avr/power.h>
 #include <avr/wdt.h>
-#include <SdFat.h>                // SD and RTC libraries
+#include <SdFat.h> //SD and RTC libraries
 #include "RTClib.h"
 #include <Wire.h>
 #include <SPI.h>
@@ -16,7 +16,7 @@
 //#include <Adafruit_MotorShield.h>
 //#include "utility/Adafruit_PWMServoDriver.h"
 
-#define FILENAME "PELLET_Cage12.csv"
+#define FILENAME "Feeder_Data.csv"
 
 #define DISPLAY_SERIAL_RX_PIN 255 // we don't need a receive pin, 255 indicates this
 // Connect the Arduino pin 3 to the rx pin on the 7 segment display
@@ -81,7 +81,8 @@ int logData()
   // inactive pokes, and the number of drinking well entries.
 
   dataFile = SD.open(FILENAME, FILE_WRITE);
-  if (dataFile) {
+  if (dataFile)
+  {
     Serial.println(F("File successfully written..."));
     Serial.println(time);
     dataFile.print(time);
@@ -100,7 +101,8 @@ int logData()
 void clearDisplay()
 { LEDserial.write(0x76); } // Clear display command
 
-void setup() {
+void setup()
+{
   // make all unused pins inputs with pullups enabled by default, lowest power drain
   // leave pins 0 & 1 (Arduino RX and TX) as they are
   for (byte i=2; i <= 20; i++) {    
@@ -165,7 +167,7 @@ void setup() {
     dataFile.println(F("Time,Pellet Count,Pellet Drop Delay"));
     dataFile.close();
   }
-    
+  
   delay (500);
   
   // get ready for what the system should be doing
@@ -180,9 +182,7 @@ void loop()
 {
   digitalWrite(TTL_DEBUG_PIN, LOW);
   if (!updateState(0))
-  {
-    enterSleep();
-  }
+  { enterSleep(); }
   delay(100);
 }
 
@@ -247,15 +247,13 @@ void timecounter(long timeNow)
   printDigits(seconds); Serial.print(":");
   printDigits(mil);
   Serial.println();
-
 }
 
 // utility function for digital clock display: prints colon and leading 0
 void printDigits(byte digits)
 {
-  if (digits < 10) {
-    Serial.print('0');
-  }
+  if (digits < 10)
+  { Serial.print('0'); }
   Serial.print(digits, DEC);
 }
 
