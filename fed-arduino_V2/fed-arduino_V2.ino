@@ -52,7 +52,7 @@ const int MOTOR_STEPS_PER_REVOLUTION = 513;
 int PIStates[] = { 1 };
 int lastStates[] = { 1 };
 
-int pelletCount = 0;
+int pelletCount[] = 0;
 
 // Stepper motor with shield test
 //Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
@@ -105,9 +105,8 @@ void setup()
 {
   // make all unused pins inputs with pullups enabled by default, lowest power drain
   // leave pins 0 & 1 (Arduino RX and TX) as they are
-  for (byte i=2; i <= 20; i++) {    
-    pinMode(i, INPUT_PULLUP);     
-  }
+  for (byte i=2; i <= 20; i++)
+  { pinMode(i, INPUT_PULLUP); }
   ADCSRA = 0;  // disable ADC as we won't be using it
   power_adc_disable(); // ADC converter
   power_timer1_disable();// Timer 1
@@ -149,17 +148,15 @@ void setup()
 
   if (!SD.begin(CS_pin)) {
     Serial.println(F("Card failed, or not present"));
-    // don't do anything more:
-    while (1) ;
+    while (1); //end
   }
 
   Serial.println(F("Card initialized."));
 
-  dataFile = SD.open("PELLETJuly.csv", FILE_WRITE);
-  if (! dataFile) {
+  dataFile = SD.open(FILENAME, FILE_WRITE);
+  if (!dataFile) {
     Serial.println(F("Error opening datalog.txt"));
-    // Wait forever since we cant write data
-    while (1);
+    while (1); //end
   }
 
   else {
