@@ -250,7 +250,7 @@ void timecounter(long timeNow)
   Serial.println();
 }
 
-// utility function for digital clock display: prints colon and leading 0
+// utility function for digital clock display - prints leading 0
 void printDigits(byte digits)
 {
   if (digits < 10)
