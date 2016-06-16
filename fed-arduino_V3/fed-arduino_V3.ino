@@ -36,6 +36,11 @@ const int MOTOR_STEPS_PER_REVOLUTION = 513;
 Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
 Adafruit_StepperMotor *gPtrToStepper = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2);
 
+#define FILENAME "PelletData.csv"
+const int CS_pin = 10;
+SdFat SD;
+File dataFile;
+
 void setup() {
   //power saving stuff
   for (byte i=2; i <= 20; i++)
@@ -56,27 +61,70 @@ void setup() {
   updateDisplay();
 
   //SD card pin setup
-  pinMode(10, OUTPUT); //CS pin
+  pinMode(CS_pin, OUTPUT); //CS pin
   pinMode(SS, OUTPUT);
 
   //motor shield stuff
   /*gMotorShield.begin();
   gPtrToStepper->setSpeed(30);//*/
 
-  //SD card stuff
-  /*Wire.begin();
+  //SD card init stuff
+  Wire.begin();
   RTC.begin();
-
+  delay(200);
+  
   if (! RTC.isrunning()) {
     Serial.println(F("RTC is NOT running!"));
     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  }//*/ 
+  }
+  else {
+    Serial.println(F("RTC init sucessful"));
+    Serial.print(F("Current time: "));
+    Serial.println(currentTime());
+  }
 
+  if (!SD.begin(CS_pin)) {
+    Serial.println(F("Card failed, or not present"));
+    while (1); //stop
+  }
+  Serial.println(F("Card initialized."));
+
+  dataFile = SD.open(FILENAME, FILE_WRITE);
+  if (!dataFile) {
+    Serial.println(F("Error opening datalog.txt"));
+    while (1);
+  }
+  else {
+    dataFile.print(currentTime());
+    dataFile.println(F("Time,Pellet #1 Count,Pellet #2 Count"));
+    dataFile.close();
+  }
   delay(500);
 
   //setup photointerrupter vals
   for (int i = 0; i < 2; i++)
   { PIStates[i] = digitalRead(PHOTO_INTERRUPTER_PINS[i]); lastStates[i] = PIStates[i]; }
+}
+
+void logData() {
+  power_twi_enable();
+  power_spi_enable();
+
+  String time = currentTime();
+  dataFile = SD.open(FILENAME, FILE_WRITE);
+  if (dataFile) {
+    Serial.println(F("File successfully written..."));
+    Serial.println(time);
+    dataFile.print(time);
+    dataFile.print(",");
+    dataFile.print(pelletCount[0]);
+    dataFile.print(",");
+    dataFile.println(pelletCount[1]);
+    dataFile.close();
+  }
+  
+  power_twi_disable();
+  power_spi_disable();
 }
 
 void loop() {
@@ -101,7 +149,8 @@ bool updateState(int inputNum)
     Serial.print(String(inputNum + 1));
     Serial.print(F(" taken: "));
     Serial.println(String(pelletCount[inputNum]));
-    
+
+    logData();
     updateDisplay();
   }
   else if (PIStates[inputNum] == 1) {
