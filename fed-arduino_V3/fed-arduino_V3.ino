@@ -24,8 +24,7 @@ const long hour2 = 3600000; // 3600000 milliseconds in an hour
 const long minute2 = 60000; // 60000 milliseconds in a minute
 const long second2 =  1000; // 1000 milliseconds in a second
 
-RTC_DS1307 RTC;    //real time clock (on SD shield)
-String time;
+RTC_DS1307 RTC; //real time clock (on SD shield)
 
 int PIStates[] = { 1, 1 };
 int lastStates[] = { 1, 1 };
@@ -56,12 +55,13 @@ void setup() {
   setDisplayBrightness(64);
   updateDisplay();
 
-  //some stuff
+  //SD card pin setup
   pinMode(10, OUTPUT); //CS pin
   pinMode(SS, OUTPUT);
 
   //motor shield stuff
-  
+  /*gMotorShield.begin();
+  gPtrToStepper->setSpeed(30);//*/
 
   //SD card stuff
   /*Wire.begin();
@@ -70,7 +70,7 @@ void setup() {
   if (! RTC.isrunning()) {
     Serial.println(F("RTC is NOT running!"));
     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  }*/ 
+  }//*/ 
 
   delay(500);
 
@@ -183,3 +183,15 @@ void setDisplayBrightness(byte value)
 
 void setDisplayValues(String value)
 { LEDserial.print(value); }
+
+String currentTime()
+{
+  DateTime datetime = RTC.now();
+  String year = String(datetime.year(), DEC);
+  String month = String(datetime.month(), DEC);
+  String day  = String(datetime.day(),  DEC);
+  String hour  = String(datetime.hour(),  DEC);
+  String minute = String(datetime.minute(), DEC);
+  String second = String(datetime.second(), DEC);
+  return (month + "/" + day + " " + hour + ":" + minute + ":" + second);
+}
