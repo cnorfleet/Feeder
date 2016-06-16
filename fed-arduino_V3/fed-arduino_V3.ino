@@ -30,16 +30,16 @@ int PIStates[] = { 1, 1 };
 int lastStates[] = { 1, 1 };
 int pelletCount[] = { 0, 0 };
 
-const int STEPS_TO_INCREMENT = 64;
-const int MOTOR_STEPS_PER_REVOLUTION = 513;
-
-Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
-Adafruit_StepperMotor *gPtrToStepper = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2);
-
 #define FILENAME "PelletData.csv"
 const int CS_pin = 10;
 SdFat SD;
 File dataFile;
+
+/*const int MOTOR_STEPS_PER_REVOLUTION = 513;
+const int STEPS_TO_INCREMENT = 64;
+Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
+Adafruit_StepperMotor *stepperMotors[] = { gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,1), gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2) };
+//*/
 
 void setup() {
   //power saving stuff
@@ -66,7 +66,8 @@ void setup() {
 
   //motor shield stuff
   /*gMotorShield.begin();
-  gPtrToStepper->setSpeed(30);//*/
+  for (int i = 0; i < sizeof(stepperMotors); i++)
+  { stepperMotors[i]->setSpeed(30); } //*/
 
   //SD card init stuff
   Wire.begin();
@@ -158,13 +159,8 @@ bool updateState(int inputNum)
     Serial.print(F("Replacing pellet #"));
     Serial.print(String(inputNum + 1));
     Serial.println(F("..."));
-    
-    //power_twi_enable();
-    //gPtrToStepper->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
-    //gPtrToStepper->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
-    //gPtrToStepper->release();
-    //power_twi_disable();
-    delay(1000);
+    //moveMotor(inputNum);
+    delay(500);
   }
   
   else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
@@ -172,9 +168,6 @@ bool updateState(int inputNum)
     Serial.print(F("Pellet #"));
     Serial.print(String(inputNum + 1));
     Serial.println(F(" replaced"));
-    //Serial.print(F("Time Elapsed Since Last Pellet: "));
-    //timeElapsed = millis() - startTime;
-    //Serial.println(timeElapsed);
   }
   
   else  { //if PIStates == 0
@@ -244,3 +237,12 @@ String currentTime()
   String second = String(datetime.second(), DEC);
   return (month + "/" + day + " " + hour + ":" + minute + ":" + second);
 }
+
+/*void moveMotor(int motorNum)
+{
+    power_twi_enable();
+    stepperMotors[motorNum]->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
+    stepperMotors[motorNum]->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
+    stepperMotors[motorNum]->release();
+    power_twi_disable();
+} //*/
