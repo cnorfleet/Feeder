@@ -50,6 +50,16 @@ void setup() {
   Serial.begin(9600);
   Serial.println(F("Starting up..."));
 
+  //display initialization and setup
+  LEDserial.begin(9600); 
+  pinMode(DISPLAY_SERIAL_TX_PIN, OUTPUT);
+  setDisplayBrightness(64);
+  updateDisplay();
+
+  //some stuff
+  pinMode(10, OUTPUT); //CS pin
+  pinMode(SS, OUTPUT);
+
   //motor shield stuff
   
 
@@ -63,6 +73,10 @@ void setup() {
   }*/ 
 
   delay(500);
+
+  //setup photointerrupter vals
+  for (int i = 0; i < 2; i++)
+  { PIStates[i] = digitalRead(PHOTO_INTERRUPTER_PINS[i]); lastStates[i] = PIStates[i]; }
 }
 
 void loop() {
@@ -87,6 +101,8 @@ bool updateState(int inputNum)
     Serial.print(String(inputNum + 1));
     Serial.print(F(" taken: "));
     Serial.println(String(pelletCount[inputNum]));
+    
+    updateDisplay();
   }
   else if (PIStates[inputNum] == 1) {
     //need to replace pellet
@@ -147,3 +163,23 @@ void pinInterrupt(void)
   power_usart0_enable(); //re-enabling serial
   delay(300);
 }
+
+void updateDisplay()
+{
+  clearDisplay();
+  delay(2);
+  setDisplayValues(String(pelletCount[0] + "\t" + pelletCount[1]));
+}
+
+void clearDisplay()
+{ LEDserial.write(0x76); }
+
+//brightness: 0 to 255
+void setDisplayBrightness(byte value)
+{
+  LEDserial.write(0x7A);
+  LEDserial.write(value);
+}
+
+void setDisplayValues(String value)
+{ LEDserial.print(value); }
