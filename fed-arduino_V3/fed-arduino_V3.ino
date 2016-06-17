@@ -10,6 +10,7 @@
 #include <avr/io.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_MotorShield.h>
+#include <Stepper.h>
 
 #define PHOTO_INTERRUPTER_PIN_1 2
 #define PHOTO_INTERRUPTER_PIN_2 3
@@ -160,9 +161,8 @@ bool updateState(int inputNum)
     Serial.print(F("Replacing pellet #"));
     Serial.print(String(inputNum + 1));
     Serial.println(F("..."));
-    //moveMotor(inputNum);
-    //motor1->step(99900,FORWARD,DOUBLE);
-    delay(200);
+    moveMotor(inputNum);
+    delay(500);
   }
   
   else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
@@ -210,6 +210,7 @@ void pinInterrupt(void)
 
 void updateDisplay()
 {
+  Serial.println("aaa");
   clearDisplay();
   delay(2);
   if (pelletCount[0] % 100 < 10)
@@ -256,11 +257,17 @@ String makeDigit(int i)
 void moveMotor(int motorNum)
 {
     power_twi_enable();
-    Adafruit_StepperMotor *motor;
-    if (motorNum = 0) { motor = motor1; }
-    else if (motorNum = 1) { motor = motor2; }
-    motor->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
-    motor->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
-    motor->release();
+    if (motorNum == 0)
+    {
+      motor1->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
+      motor1->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
+      motor1->release();
+    }
+    else if (motorNum == 1)
+    {
+      motor2->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
+      motor2->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
+      motor2->release();
+    }
     power_twi_disable();
-} //*/
+}
