@@ -35,11 +35,11 @@ const int CS_pin = 10;
 SdFat SD;
 File dataFile;
 
-/*const int MOTOR_STEPS_PER_REVOLUTION = 513;
+const int MOTOR_STEPS_PER_REVOLUTION = 513;
 const int STEPS_TO_INCREMENT = 64;
 Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
-Adafruit_StepperMotor *stepperMotors[] = { gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,1), gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2) };
-//*/
+Adafruit_StepperMotor *motor1 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,1);
+Adafruit_StepperMotor *motor2 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2);
 
 void setup() {
   //power saving stuff
@@ -65,9 +65,9 @@ void setup() {
   pinMode(SS, OUTPUT);
 
   //motor shield stuff
-  /*gMotorShield.begin();
-  for (int i = 0; i < sizeof(stepperMotors); i++)
-  { stepperMotors[i]->setSpeed(30); } //*/
+  gMotorShield.begin();
+  motor1->setSpeed(30);
+  motor2->setSpeed(30);
 
   //SD card init stuff
   Wire.begin();
@@ -161,7 +161,8 @@ bool updateState(int inputNum)
     Serial.print(String(inputNum + 1));
     Serial.println(F("..."));
     //moveMotor(inputNum);
-    delay(500);
+    //motor1->step(99900,FORWARD,DOUBLE);
+    delay(200);
   }
   
   else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
@@ -211,7 +212,12 @@ void updateDisplay()
 {
   clearDisplay();
   delay(2);
-  setDisplayValues(String(pelletCount[0]%100) + "\t" + String(pelletCount[1]%100)));
+  if (pelletCount[0] % 100 < 10)
+  { LEDserial.write(0x79); LEDserial.write(1); }
+  LEDserial.print(String(pelletCount[0]));
+  if (pelletCount[1] % 100 < 10)
+  { LEDserial.write(0x79); LEDserial.write(3); }
+  LEDserial.print(String(pelletCount[1]));
 }
 
 void clearDisplay()
@@ -247,11 +253,14 @@ String makeDigit(int i)
   { return String(i, DEC); }
 }
 
-/*void moveMotor(int motorNum)
+void moveMotor(int motorNum)
 {
     power_twi_enable();
-    stepperMotors[motorNum]->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
-    stepperMotors[motorNum]->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
-    stepperMotors[motorNum]->release();
+    Adafruit_StepperMotor *motor;
+    if (motorNum = 0) { motor = motor1; }
+    else if (motorNum = 1) { motor = motor2; }
+    motor->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
+    motor->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
+    motor->release();
     power_twi_disable();
 } //*/
