@@ -72,9 +72,10 @@ void setup() {
   //SD card init stuff
   Wire.begin();
   RTC.begin();
-  delay(200);
-  
-  if (! RTC.isrunning()) {
+  delay(250);
+
+  //RTC.adjust(DateTime(__DATE__, __TIME__));
+  if (!RTC.isrunning()) {
     Serial.println(F("RTC is NOT running!"));
     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
@@ -210,7 +211,7 @@ void updateDisplay()
 {
   clearDisplay();
   delay(2);
-  setDisplayValues(String(pelletCount[0] + "\t" + pelletCount[1]));
+  setDisplayValues(String(pelletCount[0]%100) + "\t" + String(pelletCount[1]%100)));
 }
 
 void clearDisplay()
@@ -233,9 +234,17 @@ String currentTime()
   String month = String(datetime.month(), DEC);
   String day  = String(datetime.day(),  DEC);
   String hour  = String(datetime.hour(),  DEC);
-  String minute = String(datetime.minute(), DEC);
-  String second = String(datetime.second(), DEC);
+  String minute = makeDigit(datetime.minute());
+  String second = makeDigit(datetime.second());
   return (month + "/" + day + " " + hour + ":" + minute + ":" + second);
+}
+
+String makeDigit(int i)
+{
+  if (i < 10)
+  { return ("0" + String(i, DEC)); }
+  else
+  { return String(i, DEC); }
 }
 
 /*void moveMotor(int motorNum)
