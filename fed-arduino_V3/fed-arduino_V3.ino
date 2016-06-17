@@ -141,8 +141,6 @@ void loop() {
 bool updateState(int inputNum)
 {
   PIStates[inputNum] = digitalRead(PHOTO_INTERRUPTER_PINS[inputNum]);
-  //Serial.print("Photointerrupter State " + String(inputNum + 1) + ": ");
-  //Serial.println(PIStates[inputNum]);
 
   if (PIStates[inputNum] == 1  & PIStates[inputNum] != lastStates[inputNum]) {
     //pellet taken
@@ -162,7 +160,7 @@ bool updateState(int inputNum)
     Serial.print(String(inputNum + 1));
     Serial.println(F("..."));
     moveMotor(inputNum);
-    delay(500);
+    delay(350);
   }
   
   else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
@@ -178,7 +176,7 @@ bool updateState(int inputNum)
     return false;
   }
   lastStates[inputNum] = PIStates[inputNum];
-  return true; //*/
+  return true;
 }
 
 void enterSleep()
@@ -210,7 +208,6 @@ void pinInterrupt(void)
 
 void updateDisplay()
 {
-  Serial.println("aaa");
   clearDisplay();
   delay(2);
   if (pelletCount[0] % 100 < 10)
