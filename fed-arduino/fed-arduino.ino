@@ -67,8 +67,8 @@ void setup() {
 
   //motor shield stuff
   gMotorShield.begin();
-  motor1->setSpeed(30);
-  motor2->setSpeed(30);
+  motor1->setSpeed(20);
+  motor2->setSpeed(20);
 
   //SD card init stuff
   Wire.begin();
@@ -256,14 +256,14 @@ void moveMotor(int motorNum)
     power_twi_enable();
     if (motorNum == 0)
     {
-      motor1->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
-      motor1->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
+      motor1->step(STEPS_TO_INCREMENT/2,BACKWARD,DOUBLE);
+      motor1->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
       motor1->release();
     }
     else if (motorNum == 1)
     {
-      motor2->step(STEPS_TO_INCREMENT/2,FORWARD,DOUBLE);
-      motor2->step(STEPS_TO_INCREMENT,BACKWARD,DOUBLE);
+      motor2->step(STEPS_TO_INCREMENT/2,BACKWARD,DOUBLE);
+      motor2->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
       motor2->release();
     }
     power_twi_disable();
