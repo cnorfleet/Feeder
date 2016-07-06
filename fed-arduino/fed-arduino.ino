@@ -37,7 +37,7 @@ SdFat SD;
 File dataFile;
 
 const int MOTOR_STEPS_PER_REVOLUTION = 513;
-const int STEPS_TO_INCREMENT = 64;
+const int STEPS_TO_INCREMENT = 32;
 Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
 Adafruit_StepperMotor *motor1 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,1);
 Adafruit_StepperMotor *motor2 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2);
@@ -67,8 +67,8 @@ void setup() {
 
   //motor shield stuff
   gMotorShield.begin();
-  motor1->setSpeed(20);
-  motor2->setSpeed(20);
+  motor1->setSpeed(12);
+  motor2->setSpeed(2);
 
   //SD card init stuff
   Wire.begin();
@@ -160,7 +160,7 @@ bool updateState(int inputNum)
     Serial.print(String(inputNum + 1));
     Serial.println(F("..."));
     moveMotor(inputNum);
-    delay(350);
+    delay(500);
   }
   
   else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
@@ -256,13 +256,13 @@ void moveMotor(int motorNum)
     power_twi_enable();
     if (motorNum == 0)
     {
-      motor1->step(STEPS_TO_INCREMENT/2,BACKWARD,DOUBLE);
+      motor1->step(STEPS_TO_INCREMENT/3,BACKWARD,DOUBLE);
       motor1->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
       motor1->release();
     }
     else if (motorNum == 1)
     {
-      motor2->step(STEPS_TO_INCREMENT/2,BACKWARD,DOUBLE);
+      motor2->step(STEPS_TO_INCREMENT/3,BACKWARD,DOUBLE);
       motor2->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
       motor2->release();
     }
