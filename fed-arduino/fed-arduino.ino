@@ -29,6 +29,7 @@ RTC_DS1307 RTC; //real time clock (on SD shield)
 
 int PIStates[] = { 1, 1 };
 int lastStates[] = { 1, 1 };
+bool justMoved[] = { true, true };
 int pelletCount[] = { 0, 0 };
 
 #define FILENAME "PelletData.csv"
@@ -37,7 +38,7 @@ SdFat SD;
 File dataFile;
 
 const int MOTOR_STEPS_PER_REVOLUTION = 513;
-const int STEPS_TO_INCREMENT = 32;
+const int STEPS_TO_INCREMENT = 72; //24
 Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
 Adafruit_StepperMotor *motor1 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,1);
 Adafruit_StepperMotor *motor2 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2);
@@ -67,8 +68,8 @@ void setup() {
 
   //motor shield stuff
   gMotorShield.begin();
-  motor1->setSpeed(12);
-  motor2->setSpeed(2);
+  motor1->setSpeed(30);
+  motor2->setSpeed(30);
 
   //SD card init stuff
   Wire.begin();
@@ -153,14 +154,19 @@ bool updateState(int inputNum)
 
     logData();
     updateDisplay();
+    justMoved[inputNum] = false;
   }
   else if (PIStates[inputNum] == 1) {
     //need to replace pellet
-    Serial.print(F("Replacing pellet #"));
-    Serial.print(String(inputNum + 1));
-    Serial.println(F("..."));
-    moveMotor(inputNum);
-    delay(500);
+    if (!justMoved[inputNum]) {
+      Serial.print(F("Replacing pellet #"));
+      Serial.print(String(inputNum + 1));
+      Serial.println(F("..."));
+      moveMotor(inputNum);
+      justMoved[inputNum] = true;
+    }
+    else
+    { delay(500); justMoved[inputNum] = false; }
   }
   
   else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
@@ -168,11 +174,13 @@ bool updateState(int inputNum)
     Serial.print(F("Pellet #"));
     Serial.print(String(inputNum + 1));
     Serial.println(F(" replaced"));
+    justMoved[inputNum] = false;
   }
   
   else  { //if PIStates == 0
     //pellet still there, do nothing
     lastStates[inputNum] = PIStates[inputNum];
+    justMoved[inputNum] = false;
     return false;
   }
   lastStates[inputNum] = PIStates[inputNum];
@@ -181,6 +189,7 @@ bool updateState(int inputNum)
 
 void enterSleep()
 {
+  Serial.println(F("Going to sleep.")); delay(50);
   power_usart0_disable(); //Serial (USART)
   sleep_enable();
 
@@ -203,6 +212,7 @@ void pinInterrupt(void)
   detachInterrupt(digitalPinToInterrupt(PHOTO_INTERRUPTER_PIN_2));
   sleep_disable(); //disabling sleep
   power_usart0_enable(); //re-enabling serial
+  Serial.println(F("Exiting sleep."));
   delay(300);
 }
 
