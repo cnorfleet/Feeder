@@ -99,9 +99,9 @@ void setup() {
     while (1);
   }
   else {
-    dataFile.print(currentTime());
     dataFile.println(F("Time,Pellet #1 Count,Pellet #2 Count"));
     dataFile.close();
+    logData();
   }
   delay(500);
 
