@@ -29,7 +29,7 @@ RTC_DS1307 RTC; //real time clock (on SD shield)
 
 int PIStates[] = { 1, 1 };
 int lastStates[] = { 1, 1 };
-bool justMoved[] = { true, true };
+int lastTime[] = { 0, 0 };
 int pelletCount[] = { 0, 0 };
 
 #define FILENAME "PelletData.csv"
@@ -154,19 +154,20 @@ bool updateState(int inputNum)
 
     logData();
     updateDisplay();
-    justMoved[inputNum] = false;
+    lastTime[inputNum] = 0;
   }
   else if (PIStates[inputNum] == 1) {
     //need to replace pellet
-    if (!justMoved[inputNum]) {
+    if (lastTime[inputNum] >= 8) {
       Serial.print(F("Replacing pellet #"));
       Serial.print(String(inputNum + 1));
       Serial.println(F("..."));
       moveMotor(inputNum);
-      justMoved[inputNum] = true;
+      lastTime[inputNum] = 6;
+      delay(200);
     }
     else
-    { delay(500); justMoved[inputNum] = false; }
+    { delay(500); lastTime[inputNum] += 1; }
   }
   
   else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
@@ -174,13 +175,13 @@ bool updateState(int inputNum)
     Serial.print(F("Pellet #"));
     Serial.print(String(inputNum + 1));
     Serial.println(F(" replaced"));
-    justMoved[inputNum] = false;
+    lastTime[inputNum] = 0;
   }
   
   else  { //if PIStates == 0
     //pellet still there, do nothing
     lastStates[inputNum] = PIStates[inputNum];
-    justMoved[inputNum] = false;
+    lastTime[inputNum] = 0;
     return false;
   }
   lastStates[inputNum] = PIStates[inputNum];
