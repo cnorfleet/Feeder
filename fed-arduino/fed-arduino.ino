@@ -31,6 +31,8 @@ int PIStates[] = { 1, 1 };
 int lastStates[] = { 1, 1 };
 int lastTime[] = { 0, 0 };
 int pelletCount[] = { 0, 0 };
+bool pelletCounted[] = { false, false };
+bool countMe[] = { false, false };
 
 #define FILENAME "PelletData.csv"
 const int CS_pin = 10;
@@ -145,18 +147,26 @@ bool updateState(int inputNum)
 
   if (PIStates[inputNum] == 1  & PIStates[inputNum] != lastStates[inputNum]) {
     //pellet taken
-    pelletCount[inputNum]++;
-    Serial.println(F("Pellet taken"));
-    Serial.print(F("Pellets of type #"));
-    Serial.print(String(inputNum + 1));
-    Serial.print(F(" taken: "));
-    Serial.println(String(pelletCount[inputNum]));
-
-    logData();
-    updateDisplay();
-    lastTime[inputNum] = 0;
+    if (!pelletCounted[inputNum])
+    {
+      countMe[inputNum] = true;
+      pelletCounted[inputNum] = true;
+    }
   }
   else if (PIStates[inputNum] == 1) {
+    if (countMe[inputNum] && lastTime[inputNum] >= 8) {
+      pelletCount[inputNum]++;
+      Serial.println(F("Pellet taken"));
+      Serial.print(F("Pellets of type #"));
+      Serial.print(String(inputNum + 1));
+      Serial.print(F(" taken: "));
+      Serial.println(String(pelletCount[inputNum]));
+      
+      logData();
+      updateDisplay();
+      lastTime[inputNum] = 0;
+      countMe[inputNum] = false;
+    }
     //need to replace pellet
     if (lastTime[inputNum] >= 8) {
       Serial.print(F("Replacing pellet #"));
@@ -164,6 +174,7 @@ bool updateState(int inputNum)
       Serial.println(F("..."));
       moveMotor(inputNum);
       lastTime[inputNum] = 6;
+      pelletCounted[inputNum] = false;
       delay(200);
     }
     else
