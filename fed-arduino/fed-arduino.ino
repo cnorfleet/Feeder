@@ -40,7 +40,7 @@ SdFat SD;
 File dataFile;
 
 const int MOTOR_STEPS_PER_REVOLUTION = 513;
-const int STEPS_TO_INCREMENT = 72; //24
+const int STEPS_TO_INCREMENT = 48; //24
 Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
 Adafruit_StepperMotor *motor1 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,1);
 Adafruit_StepperMotor *motor2 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2);
@@ -70,8 +70,8 @@ void setup() {
 
   //motor shield stuff
   gMotorShield.begin();
-  motor1->setSpeed(30);
-  motor2->setSpeed(30);
+  motor1->setSpeed(15);
+  motor2->setSpeed(15);
 
   //SD card init stuff
   Wire.begin();
@@ -278,13 +278,13 @@ void moveMotor(int motorNum)
     power_twi_enable();
     if (motorNum == 0)
     {
-      motor1->step(STEPS_TO_INCREMENT/3,BACKWARD,DOUBLE);
+      motor1->step(STEPS_TO_INCREMENT/6,BACKWARD,DOUBLE);
       motor1->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
       motor1->release();
     }
     else if (motorNum == 1)
     {
-      motor2->step(STEPS_TO_INCREMENT/3,BACKWARD,DOUBLE);
+      motor2->step(STEPS_TO_INCREMENT/6,BACKWARD,DOUBLE);
       motor2->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
       motor2->release();
     }
