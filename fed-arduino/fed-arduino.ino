@@ -1,4 +1,5 @@
-/* Feeder code V3 */
+/* Feeder code V3 */  //code with stars (**) next to it is particularly important or contains variables for tuning values
+//importing libraries
 #include <avr/sleep.h>
 #include <avr/power.h>
 #include <avr/wdt.h>
@@ -12,14 +13,17 @@
 #include <Adafruit_MotorShield.h>
 #include <Stepper.h>
 
+//defining location of IR interrupter pins (pins 2 and 3)
 #define PHOTO_INTERRUPTER_PIN_1 2
 #define PHOTO_INTERRUPTER_PIN_2 3
 const int PHOTO_INTERRUPTER_PINS[] = { PHOTO_INTERRUPTER_PIN_1, PHOTO_INTERRUPTER_PIN_2 };
 
+//defining serial display pin (pin 9)
 #define DISPLAY_SERIAL_RX_PIN 255 //255=null
 #define DISPLAY_SERIAL_TX_PIN 9
 SoftwareSerial LEDserial = SoftwareSerial(DISPLAY_SERIAL_RX_PIN, DISPLAY_SERIAL_TX_PIN);
 
+//reference definitions for time conversions
 const long day2 = 86400000; // 86400000 milliseconds in a day
 const long hour2 = 3600000; // 3600000 milliseconds in an hour
 const long minute2 = 60000; // 60000 milliseconds in a minute
@@ -27,6 +31,8 @@ const long second2 =  1000; // 1000 milliseconds in a second
 
 RTC_DS1307 RTC; //real time clock (on SD shield)
 
+//setting up all the variables that will be used for couting pellets**
+//          and storing data on IR photo-interrupter states
 int PIStates[] = { 1, 1 };
 int lastStates[] = { 1, 1 };
 int lastTime[] = { 0, 0 };
@@ -34,17 +40,20 @@ int pelletCount[] = { 0, 0 };
 bool pelletCounted[] = { false, false };
 bool countMe[] = { false, false };
 
+//setting up variables for dealing with the SD card
 #define FILENAME "PelletData.csv"
 const int CS_pin = 10;
 SdFat SD;
 File dataFile;
 
-const int MOTOR_STEPS_PER_REVOLUTION = 513;
-const int STEPS_TO_INCREMENT = 48; //24
+//setting up motors and motor variables**
+const int MOTOR_STEPS_PER_REVOLUTION = 513;  //number of "steps" the motor takes in order to make a full revolution.  Typically one more than a power of two
+const int STEPS_TO_INCREMENT = 48; //steps it travels each time it turns
 Adafruit_MotorShield gMotorShield = Adafruit_MotorShield();
 Adafruit_StepperMotor *motor1 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,1);
 Adafruit_StepperMotor *motor2 = gMotorShield.getStepper(MOTOR_STEPS_PER_REVOLUTION,2);
 
+//initialization, run when the program first starts
 void setup() {
   //power saving stuff
   for (byte i=2; i <= 20; i++)
@@ -70,15 +79,17 @@ void setup() {
 
   //motor shield stuff
   gMotorShield.begin();
-  motor1->setSpeed(15);
-  motor2->setSpeed(15);
+  motor1->setSpeed(15); //setting speed of motor 1**
+  motor2->setSpeed(15); //setting speed of motor 2**
 
   //SD card init stuff
   Wire.begin();
   RTC.begin();
   delay(250);
 
-  //RTC.adjust(DateTime(__DATE__, __TIME__));
+  //RTC.adjust(DateTime(__DATE__, __TIME__));  //<--used for resetting the clock if necessary**
+
+  //checking if clock is running
   if (!RTC.isrunning()) {
     Serial.println(F("RTC is NOT running!"));
     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -89,19 +100,21 @@ void setup() {
     Serial.println(currentTime());
   }
 
+  //checking if SD card is present
   if (!SD.begin(CS_pin)) {
     Serial.println(F("Card failed, or not present"));
     while (1); //stop
   }
   Serial.println(F("Card initialized."));
 
+  //checking if SD card file saving works
   dataFile = SD.open(FILENAME, FILE_WRITE);
   if (!dataFile) {
     Serial.println(F("Error opening datalog.txt"));
     while (1);
   }
   else {
-    dataFile.println(F("Time,Pellet #1 Count,Pellet #2 Count"));
+    dataFile.println(F("Time,Pellet #1 Count,Pellet #2 Count")); //header for SD card file
     dataFile.close();
     logData();
   }
@@ -112,6 +125,7 @@ void setup() {
   { PIStates[i] = digitalRead(PHOTO_INTERRUPTER_PINS[i]); lastStates[i] = PIStates[i]; }
 }
 
+//saving data to SD card:
 void logData() {
   power_twi_enable();
   power_spi_enable();
@@ -121,6 +135,8 @@ void logData() {
   if (dataFile) {
     Serial.println(F("File successfully written..."));
     Serial.println(time);
+    
+    //printing to SD card (each comma tells the excel doc to go to the next cell to the right)**
     dataFile.print(time);
     dataFile.print(",");
     dataFile.print(pelletCount[0]);
@@ -133,6 +149,7 @@ void logData() {
   power_spi_disable();
 }
 
+//main loop - what runs the actual program
 void loop() {
   bool a = updateState(0);
   bool b = updateState(1);
@@ -141,11 +158,12 @@ void loop() {
   delay(100);
 }
 
+//main function for updating each of the IR sensor values and responding**
 bool updateState(int inputNum)
 {
-  PIStates[inputNum] = digitalRead(PHOTO_INTERRUPTER_PINS[inputNum]);
+  PIStates[inputNum] = digitalRead(PHOTO_INTERRUPTER_PINS[inputNum]); //reading in IR sensors
 
-  if (PIStates[inputNum] == 1  & PIStates[inputNum] != lastStates[inputNum]) {
+  if (PIStates[inputNum] == 1  & PIStates[inputNum] != lastStates[inputNum]) { //if currently empty but wasn't empty last time
     //pellet taken
     if (!pelletCounted[inputNum])
     {
@@ -153,9 +171,9 @@ bool updateState(int inputNum)
       pelletCounted[inputNum] = true;
     }
   }
-  else if (PIStates[inputNum] == 1) {
+  else if (PIStates[inputNum] == 1) { //if still empty, same as last time
     if (countMe[inputNum] && lastTime[inputNum] >= 8) {
-      pelletCount[inputNum]++;
+      pelletCount[inputNum]++; //counts pellet
       Serial.println(F("Pellet taken"));
       Serial.print(F("Pellets of type #"));
       Serial.print(String(inputNum + 1));
@@ -181,7 +199,7 @@ bool updateState(int inputNum)
     { delay(500); lastTime[inputNum] += 1; }
   }
   
-  else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) {
+  else if (PIStates[inputNum] == 0 & PIStates[inputNum] != lastStates[inputNum]) { //if currently has pellet but didn't have pellet last time
     //pellet just replaced
     Serial.print(F("Pellet #"));
     Serial.print(String(inputNum + 1));
@@ -189,7 +207,7 @@ bool updateState(int inputNum)
     lastTime[inputNum] = 0;
   }
   
-  else  { //if PIStates == 0
+  else  { //if PIStates == 0 //if still has pellet, same as last time
     //pellet still there, do nothing
     lastStates[inputNum] = PIStates[inputNum];
     lastTime[inputNum] = 0;
@@ -199,6 +217,30 @@ bool updateState(int inputNum)
   return true;
 }
 
+//code for moving motors
+void moveMotor(int motorNum)
+{
+    const int backMotion = 6; //fraction of the motion for which to move backwards (6 -> 1/6th)**
+    power_twi_enable();
+    if (motorNum == 0) //for moving first motor
+    {
+      motor1->step(STEPS_TO_INCREMENT/backMotion,BACKWARD,DOUBLE);
+      motor1->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
+      motor1->release();
+    }
+    else if (motorNum == 1) //for moving second motor
+    {
+      motor2->step(STEPS_TO_INCREMENT/backMotion,BACKWARD,DOUBLE);
+      motor2->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
+      motor2->release();
+    }
+    power_twi_disable();
+}
+
+
+//-------------------------anything after this probably shouldn't be changed-----------------------
+
+//code for entering sleep mode
 void enterSleep()
 {
   Serial.println(F("Going to sleep.")); delay(50);
@@ -217,7 +259,7 @@ void enterSleep()
   sleep_disable();
 }
 
-//run when the interrupt is triggered
+//code for what to do when leaving sleep mode, run when the interrupt is triggered
 void pinInterrupt(void)
 {
   detachInterrupt(digitalPinToInterrupt(PHOTO_INTERRUPTER_PIN_1));
@@ -228,6 +270,7 @@ void pinInterrupt(void)
   delay(300);
 }
 
+//updating the LCD monitor display
 void updateDisplay()
 {
   clearDisplay();
@@ -240,6 +283,7 @@ void updateDisplay()
   LEDserial.print(String(pelletCount[1]));
 }
 
+//next few are all methods for editing display
 void clearDisplay()
 { LEDserial.write(0x76); }
 
@@ -253,6 +297,7 @@ void setDisplayBrightness(byte value)
 void setDisplayValues(String value)
 { LEDserial.print(value); }
 
+//returns time from clock
 String currentTime()
 {
   DateTime datetime = RTC.now();
@@ -265,28 +310,11 @@ String currentTime()
   return (month + "/" + day + " " + hour + ":" + minute + ":" + second);
 }
 
+//formats numbers from clock
 String makeDigit(int i)
 {
   if (i < 10)
   { return ("0" + String(i, DEC)); }
   else
   { return String(i, DEC); }
-}
-
-void moveMotor(int motorNum)
-{
-    power_twi_enable();
-    if (motorNum == 0)
-    {
-      motor1->step(STEPS_TO_INCREMENT/6,BACKWARD,DOUBLE);
-      motor1->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
-      motor1->release();
-    }
-    else if (motorNum == 1)
-    {
-      motor2->step(STEPS_TO_INCREMENT/6,BACKWARD,DOUBLE);
-      motor2->step(STEPS_TO_INCREMENT,FORWARD,DOUBLE);
-      motor2->release();
-    }
-    power_twi_disable();
 }
